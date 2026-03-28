@@ -19,7 +19,7 @@ Works with Claude Code, Cursor, OpenAI-based agents, or anything that talks to t
 
 ## Why Culpa?
 
-AI agents are nondeterministic. When they fail, you can't reproduce the failure. Traditional logging shows you what happened but can't replay it. Culpa records the full execution context and lets you replay failures deterministically using stub responses — zero API cost. When you want to explore alternatives, fork at any decision point and see what would have happened differently.
+AI agents are nondeterministic. When they fail, you can't reproduce the failure. Traditional logging shows you what happened but can't replay it. Culpa records the full execution context and lets you replay failures deterministically using stub responses, resulting in zero API cost. When you want to explore alternatives, fork at any decision point and see what would have happened differently.
 
 ## Quick start
 
