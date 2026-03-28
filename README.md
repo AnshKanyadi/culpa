@@ -5,14 +5,21 @@
 <h1 align="center">Culpa</h1>
 
 <p align="center">
-  Deterministic replay and counterfactual debugging for AI coding agents.
+  Deterministic replay and counterfactual debugging for AI coding agents.<br>
+  <strong>91 tests passing</strong> · Python 3.12+ · MIT License
 </p>
 
 ---
 
+![Culpa Dashboard — Session Detail](docs/dashboard-detail.png)
+
 Culpa is a flight recorder for AI agents. It captures every LLM call, tool invocation, file change, and terminal command with full fidelity and then lets you replay the exact failure path or fork at any decision point to run "what if?" experiments.
 
 Works with Claude Code, Cursor, OpenAI-based agents, or anything that talks to the Anthropic/OpenAI API.
+
+## Why Culpa?
+
+AI agents are nondeterministic. When they fail, you can't reproduce the failure. Traditional logging shows you what happened but can't replay it. Culpa records the full execution context and lets you replay failures deterministically using stub responses — zero API cost. When you want to explore alternatives, fork at any decision point and see what would have happened differently.
 
 ## Quick start
 
@@ -97,6 +104,8 @@ culpa serve
 ```
 
 The dashboard shows the full event timeline, lets you inspect each LLM call's request/response, view file diffs, and replay or fork the session.
+
+![Culpa Dashboard — Sessions List](docs/dashboard-sessions.png)
 
 ## Replaying
 
