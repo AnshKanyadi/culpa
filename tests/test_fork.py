@@ -1,5 +1,5 @@
 """
-Tests for the PrismoForker.
+Tests for the CulpaForker.
 """
 
 import sys
@@ -8,13 +8,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 
 import pytest
 
-from prismo.recorder import PrismoRecorder
-from prismo.fork import PrismoForker
-from prismo.models import LLMCallEvent, ForkResult
+from culpa.recorder import CulpaRecorder
+from culpa.fork import CulpaForker
+from culpa.models import LLMCallEvent, ForkResult
 
 
 def make_session():
-    r = PrismoRecorder()
+    r = CulpaRecorder()
     r.start_session("Fork test session")
     r.record_llm_call(
         model="claude",
@@ -34,7 +34,7 @@ def make_session():
 
 def test_fork_at_valid_event():
     session = make_session()
-    forker = PrismoForker(session)
+    forker = CulpaForker(session)
 
     llm_event = [e for e in session.events if isinstance(e, LLMCallEvent)][0]
     result = forker.fork_at(
@@ -51,7 +51,7 @@ def test_fork_at_valid_event():
 
 def test_fork_has_original_events():
     session = make_session()
-    forker = PrismoForker(session)
+    forker = CulpaForker(session)
 
     llm_event = [e for e in session.events if isinstance(e, LLMCallEvent)][0]
     result = forker.fork_at(llm_event.event_id, "Alternative response")
@@ -62,7 +62,7 @@ def test_fork_has_original_events():
 
 def test_fork_has_forked_events():
     session = make_session()
-    forker = PrismoForker(session)
+    forker = CulpaForker(session)
 
     llm_event = [e for e in session.events if isinstance(e, LLMCallEvent)][0]
     result = forker.fork_at(llm_event.event_id, "Alternative response")
@@ -75,7 +75,7 @@ def test_fork_has_forked_events():
 
 def test_fork_invalid_event_id():
     session = make_session()
-    forker = PrismoForker(session)
+    forker = CulpaForker(session)
 
     with pytest.raises(ValueError, match="not found"):
         forker.fork_at("nonexistent-event-id", "response")
@@ -83,9 +83,9 @@ def test_fork_invalid_event_id():
 
 def test_fork_non_llm_event():
     session = make_session()
-    forker = PrismoForker(session)
+    forker = CulpaForker(session)
 
-    from prismo.models import FileChangeEvent
+    from culpa.models import FileChangeEvent
     file_event = [e for e in session.events if isinstance(e, FileChangeEvent)][0]
 
     with pytest.raises(ValueError, match="not an LLM call"):
@@ -94,7 +94,7 @@ def test_fork_non_llm_event():
 
 def test_fork_divergence_summary():
     session = make_session()
-    forker = PrismoForker(session)
+    forker = CulpaForker(session)
 
     llm_event = [e for e in session.events if isinstance(e, LLMCallEvent)][0]
     result = forker.fork_at(llm_event.event_id, "Different approach")

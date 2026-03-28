@@ -1,18 +1,11 @@
-/**
- * Right panel — session metadata, stats, and file tree.
- */
-
 import React, { useState } from 'react'
 import {
   Brain,
   FileText,
   Terminal,
-  Wrench,
   AlertTriangle,
   DollarSign,
-  Clock,
   ChevronRight,
-  Folder,
 } from 'lucide-react'
 import { cn, formatDuration, formatTokens, formatCost, formatDate, getStatusColor } from '../lib/utils'
 import type { Session, AnyEvent, FileChangeEvent } from '../lib/types'
@@ -27,13 +20,13 @@ interface StatCardProps {
 
 function StatCard({ icon, label, value, subValue, color }: StatCardProps) {
   return (
-    <div className="bg-prismo-surface border border-prismo-border rounded-lg p-3">
-      <div className={cn('flex items-center gap-2 mb-1', color || 'text-prismo-text-dim')}>
+    <div className="bg-culpa-surface border border-culpa-border rounded-lg p-3">
+      <div className={cn('flex items-center gap-2 mb-1', color || 'text-culpa-text-dim')}>
         {icon}
         <span className="text-xs uppercase tracking-wide">{label}</span>
       </div>
-      <div className="text-lg font-mono font-medium text-prismo-text">{value}</div>
-      {subValue && <div className="text-xs text-prismo-text-dim mt-0.5">{subValue}</div>}
+      <div className="text-lg font-mono font-medium text-culpa-text">{value}</div>
+      {subValue && <div className="text-xs text-culpa-text-dim mt-0.5">{subValue}</div>}
     </div>
   )
 }
@@ -66,17 +59,17 @@ function FileTree({ filePaths, events, onSelectFile }: FileTreeProps) {
           <button
             key={path}
             onClick={() => onSelectFile(path)}
-            className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-prismo-muted transition-colors text-left group"
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-culpa-muted transition-colors text-left group"
           >
-            <FileText size={12} className="text-prismo-green flex-shrink-0" />
+            <FileText size={12} className="text-culpa-green flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-mono text-prismo-text truncate">{filename}</div>
+              <div className="text-xs font-mono text-culpa-text truncate">{filename}</div>
               {dir && (
-                <div className="text-xs text-prismo-text-dim truncate">{dir}/</div>
+                <div className="text-xs text-culpa-text-dim truncate">{dir}/</div>
               )}
             </div>
             {count > 0 && (
-              <span className="text-xs text-prismo-text-dim bg-prismo-muted px-1.5 py-0.5 rounded font-mono">
+              <span className="text-xs text-culpa-text-dim bg-culpa-muted px-1.5 py-0.5 rounded font-mono">
                 {count}
               </span>
             )}
@@ -103,9 +96,8 @@ export function SessionOverview({ session, onSelectFileEvents, className }: Sess
 
   return (
     <div className={cn('p-4 space-y-4 overflow-auto', className)}>
-      {/* Session info */}
       <div>
-        <h2 className="text-sm font-semibold text-prismo-text mb-1 line-clamp-2">
+        <h2 className="text-sm font-semibold text-culpa-text mb-1 line-clamp-2">
           {session.name}
         </h2>
         <div className="flex items-center gap-2">
@@ -113,67 +105,65 @@ export function SessionOverview({ session, onSelectFileEvents, className }: Sess
             ● {session.status}
           </span>
           {session.started_at && (
-            <span className="text-xs text-prismo-text-dim">
+            <span className="text-xs text-culpa-text-dim">
               {formatDate(session.started_at)}
             </span>
           )}
         </div>
         {session.duration_ms !== undefined && (
-          <div className="text-xs text-prismo-text-dim mt-0.5">
+          <div className="text-xs text-culpa-text-dim mt-0.5">
             Duration: {formatDuration(session.duration_ms)}
           </div>
         )}
       </div>
 
-      {/* Stats grid */}
       <div className="grid grid-cols-2 gap-2">
         <StatCard
           icon={<Brain size={12} />}
           label="LLM Calls"
           value={s.total_llm_calls || 0}
-          color="text-prismo-blue"
+          color="text-culpa-blue"
         />
         <StatCard
           icon={<FileText size={12} />}
           label="Tokens"
           value={formatTokens(totalTokens)}
           subValue={`↑${formatTokens(s.total_input_tokens || 0)} ↓${formatTokens(s.total_output_tokens || 0)}`}
-          color="text-prismo-text-dim"
+          color="text-culpa-text-dim"
         />
         <StatCard
           icon={<DollarSign size={12} />}
           label="Est. Cost"
           value={formatCost(s.estimated_cost_usd || 0)}
-          color="text-prismo-text-dim"
+          color="text-culpa-text-dim"
         />
         <StatCard
           icon={<AlertTriangle size={12} />}
           label="Errors"
           value={s.error_count || 0}
-          color={s.error_count ? 'text-prismo-red' : 'text-prismo-text-dim'}
+          color={s.error_count ? 'text-culpa-red' : 'text-culpa-text-dim'}
         />
         <StatCard
           icon={<FileText size={12} />}
           label="Files Changed"
           value={totalFilesChanged}
           subValue={`+${s.files_created || 0} ~${s.files_modified || 0} -${s.files_deleted || 0}`}
-          color="text-prismo-green"
+          color="text-culpa-green"
         />
         <StatCard
           icon={<Terminal size={12} />}
           label="Commands"
           value={s.terminal_commands || 0}
-          color="text-prismo-orange"
+          color="text-culpa-orange"
         />
       </div>
 
-      {/* Models used */}
       {s.models_used && s.models_used.length > 0 && (
         <div>
-          <div className="text-xs text-prismo-text-dim mb-1.5 uppercase tracking-wide">Models</div>
+          <div className="text-xs text-culpa-text-dim mb-1.5 uppercase tracking-wide">Models</div>
           <div className="space-y-1">
             {s.models_used.map((model) => (
-              <div key={model} className="text-xs font-mono text-prismo-blue bg-prismo-blue-dim px-2 py-1 rounded">
+              <div key={model} className="text-xs font-mono text-culpa-blue bg-culpa-blue-dim px-2 py-1 rounded">
                 {model}
               </div>
             ))}
@@ -181,11 +171,10 @@ export function SessionOverview({ session, onSelectFileEvents, className }: Sess
         </div>
       )}
 
-      {/* File tree */}
       {s.files_touched && s.files_touched.length > 0 && (
         <div>
           <button
-            className="w-full flex items-center justify-between text-xs text-prismo-text-dim mb-1.5 uppercase tracking-wide hover:text-prismo-text transition-colors"
+            className="w-full flex items-center justify-between text-xs text-culpa-text-dim mb-1.5 uppercase tracking-wide hover:text-culpa-text transition-colors"
             onClick={() => setFilesExpanded(!filesExpanded)}
           >
             <span>Files Touched ({s.files_touched.length})</span>
@@ -204,15 +193,14 @@ export function SessionOverview({ session, onSelectFileEvents, className }: Sess
         </div>
       )}
 
-      {/* Metadata */}
       {session.metadata && Object.keys(session.metadata).length > 0 && (
         <div>
-          <div className="text-xs text-prismo-text-dim mb-1.5 uppercase tracking-wide">Metadata</div>
+          <div className="text-xs text-culpa-text-dim mb-1.5 uppercase tracking-wide">Metadata</div>
           <div className="space-y-1">
             {Object.entries(session.metadata).map(([key, value]) => (
               <div key={key} className="flex justify-between text-xs">
-                <span className="text-prismo-text-dim font-mono">{key}</span>
-                <span className="text-prismo-text font-mono truncate ml-2">
+                <span className="text-culpa-text-dim font-mono">{key}</span>
+                <span className="text-culpa-text font-mono truncate ml-2">
                   {String(value)}
                 </span>
               </div>

@@ -9,12 +9,12 @@ import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 
-from prismo.models import Session, LLMCallEvent
-from prismo.fork import PrismoForker
+from culpa.models import Session, LLMCallEvent
+from culpa.fork import CulpaForker
 
 
 def load_demo_session() -> Session:
-    demo_path = Path.home() / ".prismo" / "sessions" / "01HPRISMO00DEMO0SESSION001.json"
+    demo_path = Path.home() / ".culpa" / "sessions" / "01HCULPA00DEMO0SESSION001.json"
     if not demo_path.exists():
         sys.path.insert(0, str(Path(__file__).parent))
         from demo_session import generate_demo_session
@@ -51,7 +51,7 @@ Let me check the bcrypt version and fix the encoding issue without switching lib
 The existing bcrypt hashes for 12,847 production users will remain valid.
 """
 
-    forker = PrismoForker(session)
+    forker = CulpaForker(session)
     result = forker.fork_at(
         event_id=diagnosis_llm.event_id,
         new_response=better_response.strip(),

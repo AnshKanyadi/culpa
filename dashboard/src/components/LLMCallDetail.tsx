@@ -1,10 +1,5 @@
-/**
- * Detail view for LLM call events.
- * Shows the full prompt, response, token usage, and tool calls.
- */
-
 import React, { useState } from 'react'
-import { GitFork, ChevronDown, ChevronRight, Clock, Zap } from 'lucide-react'
+import { GitFork, ChevronDown, ChevronRight, Clock } from 'lucide-react'
 import { cn, formatDuration } from '../lib/utils'
 import type { LLMCallEvent, Message, ToolCallRecord } from '../lib/types'
 
@@ -20,11 +15,11 @@ function MessageBubble({ message }: { message: Message }) {
 
   if (isSystem) {
     return (
-      <div className="rounded-lg border border-prismo-border bg-prismo-muted/40 p-3">
-        <div className="text-xs text-prismo-text-dim mb-1.5 font-mono uppercase tracking-wide">
+      <div className="rounded-lg border border-culpa-border bg-culpa-muted/40 p-3">
+        <div className="text-xs text-culpa-text-dim mb-1.5 font-mono uppercase tracking-wide">
           System
         </div>
-        <pre className="text-xs text-prismo-text font-mono whitespace-pre-wrap leading-relaxed">
+        <pre className="text-xs text-culpa-text font-mono whitespace-pre-wrap leading-relaxed">
           {content}
         </pre>
       </div>
@@ -38,24 +33,24 @@ function MessageBubble({ message }: { message: Message }) {
     )}>
       <div className={cn(
         'max-w-[85%] rounded-lg p-3',
-        isUser ? 'bg-prismo-muted border border-prismo-border' : '',
-        isAssistant ? 'bg-prismo-blue-dim border border-prismo-blue/30' : '',
-        isToolResult ? 'bg-prismo-purple-dim border border-prismo-purple/30 w-full max-w-full' : '',
+        isUser ? 'bg-culpa-muted border border-culpa-border' : '',
+        isAssistant ? 'bg-culpa-blue-dim border border-culpa-blue/30' : '',
+        isToolResult ? 'bg-culpa-purple-dim border border-culpa-purple/30 w-full max-w-full' : '',
       )}>
         <div className={cn(
           'text-xs mb-1.5 font-mono uppercase tracking-wide',
-          isUser ? 'text-prismo-text-dim' : '',
-          isAssistant ? 'text-prismo-blue' : '',
-          isToolResult ? 'text-prismo-purple' : '',
+          isUser ? 'text-culpa-text-dim' : '',
+          isAssistant ? 'text-culpa-blue' : '',
+          isToolResult ? 'text-culpa-purple' : '',
         )}>
           {message.role}
           {message.tool_call_id && (
-            <span className="ml-2 text-prismo-text-dim normal-case">
+            <span className="ml-2 text-culpa-text-dim normal-case">
               #{message.tool_call_id.slice(-6)}
             </span>
           )}
         </div>
-        <pre className="text-xs text-prismo-text font-mono whitespace-pre-wrap leading-relaxed break-all">
+        <pre className="text-xs text-culpa-text font-mono whitespace-pre-wrap leading-relaxed break-all">
           {content.length > 2000 ? content.slice(0, 2000) + '\n…[truncated]' : content}
         </pre>
       </div>
@@ -67,33 +62,33 @@ function ToolCallCard({ tc }: { tc: ToolCallRecord }) {
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-lg border border-prismo-purple/30 bg-prismo-purple-dim">
+    <div className="rounded-lg border border-culpa-purple/30 bg-culpa-purple-dim">
       <button
         className="w-full flex items-center justify-between p-3 text-left"
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-2">
           {expanded ? (
-            <ChevronDown size={14} className="text-prismo-purple" />
+            <ChevronDown size={14} className="text-culpa-purple" />
           ) : (
-            <ChevronRight size={14} className="text-prismo-purple" />
+            <ChevronRight size={14} className="text-culpa-purple" />
           )}
-          <span className="text-sm font-mono text-prismo-purple">{tc.tool_name}</span>
-          <span className="text-xs text-prismo-text-dim">#{tc.tool_call_id.slice(-6)}</span>
+          <span className="text-sm font-mono text-culpa-purple">{tc.tool_name}</span>
+          <span className="text-xs text-culpa-text-dim">#{tc.tool_call_id.slice(-6)}</span>
         </div>
       </button>
       {expanded && (
         <div className="px-3 pb-3 space-y-2">
           <div>
-            <div className="text-xs text-prismo-text-dim mb-1">Input</div>
-            <pre className="text-xs font-mono text-prismo-text bg-prismo-surface rounded p-2 overflow-auto max-h-32">
+            <div className="text-xs text-culpa-text-dim mb-1">Input</div>
+            <pre className="text-xs font-mono text-culpa-text bg-culpa-surface rounded p-2 overflow-auto max-h-32">
               {JSON.stringify(tc.input_arguments, null, 2)}
             </pre>
           </div>
           {tc.output_result !== undefined && (
             <div>
-              <div className="text-xs text-prismo-text-dim mb-1">Output</div>
-              <pre className="text-xs font-mono text-prismo-text bg-prismo-surface rounded p-2 overflow-auto max-h-32">
+              <div className="text-xs text-culpa-text-dim mb-1">Output</div>
+              <pre className="text-xs font-mono text-culpa-text bg-culpa-surface rounded p-2 overflow-auto max-h-32">
                 {typeof tc.output_result === 'string'
                   ? tc.output_result
                   : JSON.stringify(tc.output_result, null, 2)}
@@ -101,7 +96,7 @@ function ToolCallCard({ tc }: { tc: ToolCallRecord }) {
             </div>
           )}
           {tc.error && (
-            <div className="text-xs text-prismo-red font-mono bg-prismo-red-dim rounded p-2">
+            <div className="text-xs text-culpa-red font-mono bg-culpa-red-dim rounded p-2">
               Error: {tc.error}
             </div>
           )}
@@ -117,42 +112,37 @@ interface LLMCallDetailProps {
 }
 
 export function LLMCallDetail({ event, onFork }: LLMCallDetailProps) {
-  const [showRaw, setShowRaw] = useState(false)
-  const totalTokens = (event.token_usage?.input_tokens || 0) + (event.token_usage?.output_tokens || 0)
-
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* Header stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-prismo-surface border border-prismo-border rounded-lg p-3">
-          <div className="text-xs text-prismo-text-dim mb-1">Model</div>
-          <div className="text-sm font-mono text-prismo-blue truncate" title={event.model}>
+        <div className="bg-culpa-surface border border-culpa-border rounded-lg p-3">
+          <div className="text-xs text-culpa-text-dim mb-1">Model</div>
+          <div className="text-sm font-mono text-culpa-blue truncate" title={event.model}>
             {event.model}
           </div>
         </div>
-        <div className="bg-prismo-surface border border-prismo-border rounded-lg p-3">
-          <div className="text-xs text-prismo-text-dim mb-1">Tokens</div>
-          <div className="text-sm font-mono text-prismo-text">
-            <span className="text-prismo-text-dim">↑</span>
+        <div className="bg-culpa-surface border border-culpa-border rounded-lg p-3">
+          <div className="text-xs text-culpa-text-dim mb-1">Tokens</div>
+          <div className="text-sm font-mono text-culpa-text">
+            <span className="text-culpa-text-dim">↑</span>
             {event.token_usage?.input_tokens?.toLocaleString() || 0}
             {' '}
-            <span className="text-prismo-text-dim">↓</span>
+            <span className="text-culpa-text-dim">↓</span>
             {event.token_usage?.output_tokens?.toLocaleString() || 0}
           </div>
         </div>
-        <div className="bg-prismo-surface border border-prismo-border rounded-lg p-3">
-          <div className="text-xs text-prismo-text-dim mb-1 flex items-center gap-1">
+        <div className="bg-culpa-surface border border-culpa-border rounded-lg p-3">
+          <div className="text-xs text-culpa-text-dim mb-1 flex items-center gap-1">
             <Clock size={10} /> Latency
           </div>
-          <div className="text-sm font-mono text-prismo-text">
+          <div className="text-sm font-mono text-culpa-text">
             {formatDuration(event.latency_ms)}
           </div>
         </div>
       </div>
 
-      {/* Temperature / params */}
       {(event.parameters?.temperature !== undefined || event.parameters?.max_tokens !== undefined) && (
-        <div className="flex gap-3 text-xs font-mono text-prismo-text-dim">
+        <div className="flex gap-3 text-xs font-mono text-culpa-text-dim">
           {event.parameters.temperature !== undefined && (
             <span>temp={event.parameters.temperature}</span>
           )}
@@ -165,21 +155,19 @@ export function LLMCallDetail({ event, onFork }: LLMCallDetailProps) {
         </div>
       )}
 
-      {/* System prompt */}
       {event.system_prompt && (
-        <div className="rounded-lg border border-prismo-border bg-prismo-muted/40 p-3">
-          <div className="text-xs text-prismo-text-dim mb-1.5 font-mono uppercase tracking-wide">
+        <div className="rounded-lg border border-culpa-border bg-culpa-muted/40 p-3">
+          <div className="text-xs text-culpa-text-dim mb-1.5 font-mono uppercase tracking-wide">
             System Prompt
           </div>
-          <pre className="text-xs text-prismo-text font-mono whitespace-pre-wrap leading-relaxed max-h-24 overflow-auto">
+          <pre className="text-xs text-culpa-text font-mono whitespace-pre-wrap leading-relaxed max-h-24 overflow-auto">
             {event.system_prompt}
           </pre>
         </div>
       )}
 
-      {/* Messages */}
       <div>
-        <div className="text-xs text-prismo-text-dim mb-2 uppercase tracking-wide">
+        <div className="text-xs text-culpa-text-dim mb-2 uppercase tracking-wide">
           Conversation ({event.messages?.length || 0} messages)
         </div>
         <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
@@ -189,20 +177,18 @@ export function LLMCallDetail({ event, onFork }: LLMCallDetailProps) {
         </div>
       </div>
 
-      {/* Response */}
       <div>
-        <div className="text-xs text-prismo-text-dim mb-2 uppercase tracking-wide">Response</div>
-        <div className="rounded-lg border border-prismo-blue/30 bg-prismo-blue-dim p-3">
-          <pre className="text-sm text-prismo-text font-mono whitespace-pre-wrap leading-relaxed max-h-48 overflow-auto">
+        <div className="text-xs text-culpa-text-dim mb-2 uppercase tracking-wide">Response</div>
+        <div className="rounded-lg border border-culpa-blue/30 bg-culpa-blue-dim p-3">
+          <pre className="text-sm text-culpa-text font-mono whitespace-pre-wrap leading-relaxed max-h-48 overflow-auto">
             {event.response_content || '(empty response)'}
           </pre>
         </div>
       </div>
 
-      {/* Tool calls */}
       {event.tool_calls_made && event.tool_calls_made.length > 0 && (
         <div>
-          <div className="text-xs text-prismo-text-dim mb-2 uppercase tracking-wide">
+          <div className="text-xs text-culpa-text-dim mb-2 uppercase tracking-wide">
             Tool Calls ({event.tool_calls_made.length})
           </div>
           <div className="space-y-2">
@@ -213,12 +199,11 @@ export function LLMCallDetail({ event, onFork }: LLMCallDetailProps) {
         </div>
       )}
 
-      {/* Fork button */}
       <button
         onClick={onFork}
         className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg
-                   border border-prismo-blue/40 bg-prismo-blue-dim text-prismo-blue
-                   hover:bg-prismo-blue/20 transition-colors text-sm font-medium"
+                   border border-culpa-blue/40 bg-culpa-blue-dim text-culpa-blue
+                   hover:bg-culpa-blue/20 transition-colors text-sm font-medium"
       >
         <GitFork size={15} />
         Fork from here

@@ -12,13 +12,13 @@ import json
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 
-from prismo.models import Session, LLMCallEvent, FileChangeEvent, TerminalCommandEvent
-from prismo.replay import PrismoReplayer
+from culpa.models import Session, LLMCallEvent, FileChangeEvent, TerminalCommandEvent
+from culpa.replay import CulpaReplayer
 
 
 def load_demo_session() -> Session:
     """Load the demo session from disk, or generate it if not found."""
-    demo_path = Path.home() / ".prismo" / "sessions" / "01HPRISMO00DEMO0SESSION001.json"
+    demo_path = Path.home() / ".culpa" / "sessions" / "01HCULPA00DEMO0SESSION001.json"
 
     if not demo_path.exists():
         print("Demo session not found. Generating it...")
@@ -41,7 +41,7 @@ def replay_fast(session: Session):
     print(f"\n=== Fast Replay: {session.name} ===")
     print(f"Total events: {len(session.events)}\n")
 
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
     for event in replayer.replay(speed=0):  # speed=0 = no delays
         icon = {
             "llm_call": "🧠",
@@ -69,7 +69,7 @@ def inspect_file_at_point(session: Session, file_path: str, at_sequence: int):
     """Show the state of a file at a specific point in the session."""
     print(f"\n=== File State at sequence {at_sequence}: {file_path} ===")
 
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
     content = replayer.get_file_state_at(file_path, at_sequence)
 
     if content is None:

@@ -1,1 +1,1 @@
-"""Service layer for Prismo server."""
+"""Service layer for Culpa server."""

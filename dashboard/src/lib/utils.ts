@@ -1,7 +1,3 @@
-/**
- * Utility functions for the Prismo dashboard.
- */
-
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { formatDistanceToNow, format, parseISO } from 'date-fns'
@@ -57,30 +53,30 @@ export function formatTimestamp(ts: string): string {
 
 export function getEventColor(eventType: EventType): string {
   switch (eventType) {
-    case 'llm_call': return 'prismo-blue'
-    case 'tool_call': return 'prismo-purple'
-    case 'file_change': return 'prismo-green'
-    case 'terminal_cmd': return 'prismo-orange'
-    default: return 'prismo-text-dim'
+    case 'llm_call': return 'culpa-blue'
+    case 'tool_call': return 'culpa-purple'
+    case 'file_change': return 'culpa-green'
+    case 'terminal_cmd': return 'culpa-orange'
+    default: return 'culpa-text-dim'
   }
 }
 
 export function getEventBg(eventType: EventType): string {
   switch (eventType) {
-    case 'llm_call': return 'bg-prismo-blue-dim'
-    case 'tool_call': return 'bg-prismo-purple-dim'
-    case 'file_change': return 'bg-prismo-green-dim'
-    case 'terminal_cmd': return 'bg-prismo-orange-dim'
-    default: return 'bg-prismo-muted'
+    case 'llm_call': return 'bg-culpa-blue-dim'
+    case 'tool_call': return 'bg-culpa-purple-dim'
+    case 'file_change': return 'bg-culpa-green-dim'
+    case 'terminal_cmd': return 'bg-culpa-orange-dim'
+    default: return 'bg-culpa-muted'
   }
 }
 
 export function getStatusColor(status: SessionStatus): string {
   switch (status) {
-    case 'completed': return 'text-prismo-green'
-    case 'failed': return 'text-prismo-red'
-    case 'recording': return 'text-prismo-orange'
-    default: return 'text-prismo-text-dim'
+    case 'completed': return 'text-culpa-green'
+    case 'failed': return 'text-culpa-red'
+    case 'recording': return 'text-culpa-orange'
+    default: return 'text-culpa-text-dim'
   }
 }
 

@@ -1,4 +1,4 @@
-"""Storage layer for Prismo server."""
+"""Storage layer for Culpa server."""
 
 from .database import init_db, get_db
 from .repositories import SessionRepository, EventRepository, ForkRepository

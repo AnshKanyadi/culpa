@@ -9,8 +9,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 import pytest
 from unittest.mock import MagicMock, patch
 
-from prismo.recorder import PrismoRecorder
-from prismo.models import LLMCallEvent
+from culpa.recorder import CulpaRecorder
+from culpa.models import LLMCallEvent
 
 
 class MockMessage:
@@ -37,10 +37,10 @@ class MockMessage:
 
 def test_anthropic_interceptor_records_call():
     """Test that the Anthropic interceptor records LLM calls."""
-    recorder = PrismoRecorder()
+    recorder = CulpaRecorder()
     recorder.start_session("interceptor test")
 
-    from prismo.interceptors.anthropic import AnthropicInterceptor
+    from culpa.interceptors.anthropic import AnthropicInterceptor
 
     # Create a mock Anthropic client
     mock_response = MockMessage("I fixed the bug!")
@@ -72,12 +72,12 @@ def test_anthropic_interceptor_records_call():
 def test_anthropic_interceptor_uninstall():
     """Test that the interceptor is properly removed on uninstall."""
     import anthropic
-    recorder = PrismoRecorder()
+    recorder = CulpaRecorder()
     recorder.start_session("test")
 
     original = anthropic.resources.messages.Messages.create
 
-    from prismo.interceptors.anthropic import AnthropicInterceptor
+    from culpa.interceptors.anthropic import AnthropicInterceptor
     interceptor = AnthropicInterceptor(recorder)
     interceptor.install()
     interceptor.uninstall()
@@ -88,12 +88,12 @@ def test_anthropic_interceptor_uninstall():
 def test_anthropic_interceptor_context_manager():
     """Test using interceptor as context manager."""
     import anthropic
-    recorder = PrismoRecorder()
+    recorder = CulpaRecorder()
     recorder.start_session("test")
 
     original = anthropic.resources.messages.Messages.create
 
-    from prismo.interceptors.anthropic import AnthropicInterceptor
+    from culpa.interceptors.anthropic import AnthropicInterceptor
     with AnthropicInterceptor(recorder):
         # Inside context, method is patched
         assert anthropic.resources.messages.Messages.create != original
@@ -104,7 +104,7 @@ def test_anthropic_interceptor_context_manager():
 
 def test_openai_interceptor_records_call():
     """Test that the OpenAI interceptor records LLM calls."""
-    recorder = PrismoRecorder()
+    recorder = CulpaRecorder()
     recorder.start_session("openai interceptor test")
 
     class MockChoice:
@@ -121,7 +121,7 @@ def test_openai_interceptor_records_call():
 
     try:
         import openai
-        from prismo.interceptors.openai import OpenAIInterceptor
+        from culpa.interceptors.openai import OpenAIInterceptor
 
         with patch("openai.resources.chat.completions.Completions.create", return_value=MockOAIResponse()):
             interceptor = OpenAIInterceptor(recorder)

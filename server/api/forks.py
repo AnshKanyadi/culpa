@@ -1,6 +1,4 @@
-"""
-Fork execution API routes for Prismo server.
-"""
+"""Fork execution API routes."""
 
 from __future__ import annotations
 
@@ -21,7 +19,7 @@ session_repo = SessionRepository()
 
 
 class ForkRequest(BaseModel):
-    """Request body for creating a fork."""
+    """Parameters for forking a session at a specific event with an alternative LLM response."""
     fork_point_event_id: str
     injected_response: str
     injected_tool_calls: list[dict[str, Any]] = []
@@ -29,37 +27,28 @@ class ForkRequest(BaseModel):
 
 @router.post("/api/sessions/{session_id}/fork")
 async def create_fork(session_id: str, request: ForkRequest) -> dict[str, Any]:
-    """
-    Fork a session at a specific event, injecting an alternative LLM response.
-
-    Returns the fork result with both the original and forked event traces.
-    """
-    # Load the session
+    """Fork a session at a specific event, injecting an alternative LLM response."""
     session_data = session_repo.get(session_id)
     if session_data is None:
         raise HTTPException(status_code=404, detail=f"Session {session_id!r} not found")
 
     try:
-        # Add SDK to path if needed
         sdk_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "sdk")
         if sdk_path not in sys.path:
             sys.path.insert(0, sdk_path)
 
-        from prismo.models import Session
-        from prismo.fork import PrismoForker
+        from culpa.models import Session
+        from culpa.fork import CulpaForker
 
-        # Reconstruct session object
         session = Session.model_validate(session_data)
 
-        # Run the fork
-        forker = PrismoForker(session)
+        forker = CulpaForker(session)
         result = forker.fork_at(
             event_id=request.fork_point_event_id,
             new_response=request.injected_response,
             injected_tool_calls=request.injected_tool_calls,
         )
 
-        # Store the fork result
         fork_data = result.model_dump()
         stored = fork_repo.create(fork_data)
         return stored or fork_data
@@ -73,7 +62,7 @@ async def create_fork(session_id: str, request: ForkRequest) -> dict[str, Any]:
 
 @router.get("/api/forks/{fork_id}")
 async def get_fork(fork_id: str) -> dict[str, Any]:
-    """Get a fork result by ID."""
+    """Retrieve a fork result by ID."""
     fork = fork_repo.get(fork_id)
     if fork is None:
         raise HTTPException(status_code=404, detail=f"Fork {fork_id!r} not found")

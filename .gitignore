@@ -22,9 +22,9 @@ htmlcov/
 .mypy_cache/
 .ruff_cache/
 
-# Prismo local data
-.prismo/
-~/.prismo/
+# Culpa local data
+.culpa/
+~/.culpa/
 
 # Node
 node_modules/

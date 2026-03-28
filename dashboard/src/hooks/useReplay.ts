@@ -1,7 +1,3 @@
-/**
- * Hook for managing replay mode in the session detail view.
- */
-
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { AnyEvent } from '../lib/types'
 
@@ -35,8 +31,7 @@ export function useReplay(events: AnyEvent[]) {
       const current = events[fromIndex]
       const next = events[fromIndex + 1]
 
-      // Calculate delay based on timestamps
-      let delay = 500 // default 500ms between events
+      let delay = 500
       if (current && next) {
         const curr = new Date(current.timestamp).getTime()
         const nxt = new Date(next.timestamp).getTime()
@@ -95,7 +90,6 @@ export function useReplay(events: AnyEvent[]) {
     scheduleNext(currentIndex)
   }, [currentIndex, scheduleNext])
 
-  // Cleanup on unmount
   useEffect(() => {
     return clearTimer
   }, [clearTimer])

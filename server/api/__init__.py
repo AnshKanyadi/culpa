@@ -1,1 +1,1 @@
-"""API route modules for Prismo server."""
+"""API route modules."""

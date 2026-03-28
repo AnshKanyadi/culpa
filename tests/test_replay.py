@@ -1,5 +1,5 @@
 """
-Tests for the PrismoReplayer.
+Tests for the CulpaReplayer.
 """
 
 import sys
@@ -9,14 +9,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 import pytest
 from datetime import datetime, timezone, timedelta
 
-from prismo.recorder import PrismoRecorder
-from prismo.replay import PrismoReplayer, ReplayDivergenceError
-from prismo.models import LLMCallEvent, FileChangeEvent
+from culpa.recorder import CulpaRecorder
+from culpa.replay import CulpaReplayer, ReplayDivergenceError
+from culpa.models import LLMCallEvent, FileChangeEvent
 
 
 def make_session_with_events():
     """Create a session with several events for testing replay."""
-    r = PrismoRecorder()
+    r = CulpaRecorder()
     r.start_session("Replay test session")
 
     r.record_llm_call(
@@ -42,7 +42,7 @@ def make_session_with_events():
 
 def test_replay_iterates_all_events():
     session = make_session_with_events()
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
 
     events = list(replayer.replay(speed=0))  # speed=0 means no delays
     assert len(events) == 5
@@ -50,7 +50,7 @@ def test_replay_iterates_all_events():
 
 def test_replay_preserves_order():
     session = make_session_with_events()
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
 
     events = list(replayer.replay(speed=0))
     sequences = [e.sequence for e in events]
@@ -59,7 +59,7 @@ def test_replay_preserves_order():
 
 def test_replay_event_types():
     session = make_session_with_events()
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
 
     events = list(replayer.replay(speed=0))
     types = [e.event_type.value for e in events]
@@ -68,7 +68,7 @@ def test_replay_event_types():
 
 def test_get_file_state_at():
     session = make_session_with_events()
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
 
     # Before file change (sequence 4)
     content_before = replayer.get_file_state_at("src/main.py", sequence=3)
@@ -81,7 +81,7 @@ def test_get_file_state_at():
 
 def test_events_from():
     session = make_session_with_events()
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
 
     # Get the first LLM call event ID
     first_llm = [e for e in session.events if isinstance(e, LLMCallEvent)][0]
@@ -93,7 +93,7 @@ def test_events_from():
 
 def test_mock_response_structure():
     session = make_session_with_events()
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
 
     # Simulate what happens when an interceptor calls _get_next_llm_response
     mock_resp = replayer._get_next_llm_response({"model": "claude-sonnet-4-6-20251001", "messages": []})
@@ -104,7 +104,7 @@ def test_mock_response_structure():
 
 def test_replay_divergence_detection():
     session = make_session_with_events()
-    replayer = PrismoReplayer(session)
+    replayer = CulpaReplayer(session)
 
     # Exhaust all LLM responses
     for _ in range(2):  # Only 2 LLM calls in session

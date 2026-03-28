@@ -1,7 +1,3 @@
-/**
- * Replay mode controls — play/pause/speed/progress bar.
- */
-
 import React from 'react'
 import { Play, Pause, Square, SkipBack, SkipForward, Zap } from 'lucide-react'
 import { cn } from '../lib/utils'
@@ -44,16 +40,14 @@ export function ReplayControls({
 
   return (
     <div className={cn('flex flex-col gap-2', className)}>
-      {/* Progress bar */}
       {!isIdle && (
         <div className="relative">
-          <div className="h-1 bg-prismo-muted rounded-full overflow-hidden">
+          <div className="h-1 bg-culpa-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-prismo-blue rounded-full transition-all duration-300"
+              className="h-full bg-culpa-blue rounded-full transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>
-          {/* Clickable progress track */}
           <input
             type="range"
             min={0}
@@ -65,15 +59,13 @@ export function ReplayControls({
         </div>
       )}
 
-      {/* Controls */}
       <div className="flex items-center gap-2">
-        {/* Main control */}
         {isIdle && (
           <button
             onClick={onPlay}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                       bg-prismo-blue text-white text-xs font-medium
-                       hover:bg-prismo-blue/80 transition-colors"
+                       bg-culpa-blue text-white text-xs font-medium
+                       hover:bg-culpa-blue/80 transition-colors"
           >
             <Play size={12} fill="currentColor" />
             Replay
@@ -84,8 +76,8 @@ export function ReplayControls({
           <button
             onClick={onPause}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                       bg-prismo-muted border border-prismo-border text-prismo-text text-xs font-medium
-                       hover:bg-prismo-border transition-colors"
+                       bg-culpa-muted border border-culpa-border text-culpa-text text-xs font-medium
+                       hover:bg-culpa-border transition-colors"
           >
             <Pause size={12} />
             Pause
@@ -96,41 +88,39 @@ export function ReplayControls({
           <button
             onClick={onResume}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                       bg-prismo-blue text-white text-xs font-medium
-                       hover:bg-prismo-blue/80 transition-colors"
+                       bg-culpa-blue text-white text-xs font-medium
+                       hover:bg-culpa-blue/80 transition-colors"
           >
             <Play size={12} fill="currentColor" />
             Resume
           </button>
         )}
 
-        {/* Skip buttons */}
         {!isIdle && (
           <>
             <button
               onClick={() => onSeek(Math.max(0, currentIndex - 1))}
-              className="p-1.5 rounded text-prismo-text-dim hover:text-prismo-text hover:bg-prismo-muted transition-colors"
+              className="p-1.5 rounded text-culpa-text-dim hover:text-culpa-text hover:bg-culpa-muted transition-colors"
             >
               <SkipBack size={14} />
             </button>
             <button
               onClick={() => onSeek(Math.min(eventCount - 1, currentIndex + 1))}
-              className="p-1.5 rounded text-prismo-text-dim hover:text-prismo-text hover:bg-prismo-muted transition-colors"
+              className="p-1.5 rounded text-culpa-text-dim hover:text-culpa-text hover:bg-culpa-muted transition-colors"
             >
               <SkipForward size={14} />
             </button>
             <button
               onClick={onStop}
-              className="p-1.5 rounded text-prismo-text-dim hover:text-prismo-red hover:bg-prismo-red-dim transition-colors"
+              className="p-1.5 rounded text-culpa-text-dim hover:text-culpa-red hover:bg-culpa-red-dim transition-colors"
             >
               <Square size={14} />
             </button>
           </>
         )}
 
-        {/* Speed selector */}
         <div className="flex items-center gap-1 ml-auto">
-          <Zap size={12} className="text-prismo-text-dim" />
+          <Zap size={12} className="text-culpa-text-dim" />
           <div className="flex gap-0.5">
             {SPEEDS.map((s) => (
               <button
@@ -139,8 +129,8 @@ export function ReplayControls({
                 className={cn(
                   'px-1.5 py-0.5 rounded text-xs font-mono transition-colors',
                   speed === s
-                    ? 'bg-prismo-blue text-white'
-                    : 'text-prismo-text-dim hover:text-prismo-text hover:bg-prismo-muted',
+                    ? 'bg-culpa-blue text-white'
+                    : 'text-culpa-text-dim hover:text-culpa-text hover:bg-culpa-muted',
                 )}
               >
                 {s}x
@@ -149,9 +139,8 @@ export function ReplayControls({
           </div>
         </div>
 
-        {/* Position indicator */}
         {!isIdle && (
-          <span className="text-xs text-prismo-text-dim font-mono ml-2">
+          <span className="text-xs text-culpa-text-dim font-mono ml-2">
             {currentIndex + 1}/{eventCount}
           </span>
         )}

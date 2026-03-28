@@ -2,7 +2,7 @@
 Basic recording example — demonstrates how to instrument an AI agent session.
 
 This example shows how to:
-1. Use prismo.init() for zero-config recording
+1. Use culpa.init() for zero-config recording
 2. Use the context manager for explicit recording
 3. Manually record events
 """
@@ -13,14 +13,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 
 import json
 
-import prismo
+import culpa
 
 
 def example_zero_config():
-    """Zero-config example: just call prismo.init() and all LLM calls are recorded."""
+    """Zero-config example: just call culpa.init() and all LLM calls are recorded."""
     print("\n=== Example 1: Zero-config recording ===")
 
-    recorder = prismo.init(session_name="Zero-config demo")
+    recorder = culpa.init(session_name="Zero-config demo")
 
     # Manually record some events to simulate agent activity
     recorder.record_llm_call(
@@ -45,7 +45,7 @@ def example_zero_config():
         after_content="def foo(): return 42",
     )
 
-    session = prismo.stop()
+    session = culpa.stop()
     print(f"Session ID: {session.session_id}")
     print(f"Events: {len(session.events)}")
     print(f"LLM calls: {session.summary.total_llm_calls}")
@@ -57,7 +57,7 @@ def example_context_manager():
     """Context manager example: explicit start/stop with automatic cleanup."""
     print("\n=== Example 2: Context manager recording ===")
 
-    with prismo.record("Context manager demo") as recorder:
+    with culpa.record("Context manager demo") as recorder:
         recorder.record_llm_call(
             model="gpt-4",
             messages=[{"role": "user", "content": "What files should I edit?"}],
@@ -82,7 +82,7 @@ def example_save_to_disk():
     """Save a session to disk for later replay or upload."""
     print("\n=== Example 3: Save session to disk ===")
 
-    recorder = PrismoRecorder()
+    recorder = CulpaRecorder()
     recorder.start_session("Save to disk demo")
 
     recorder.record_llm_call(
@@ -95,19 +95,19 @@ def example_save_to_disk():
     session = recorder.end_session()
 
     # Save to file
-    output_path = Path.home() / ".prismo" / "sessions" / f"{session.session_id}.json"
+    output_path = Path.home() / ".culpa" / "sessions" / f"{session.session_id}.json"
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(output_path, "w") as f:
         json.dump(session.model_dump(), f, default=str, indent=2)
 
     print(f"Session saved to: {output_path}")
-    print(f"Run: prismo replay {session.session_id}")
+    print(f"Run: culpa replay {session.session_id}")
     return str(output_path)
 
 
 if __name__ == "__main__":
-    from prismo.recorder import PrismoRecorder
+    from culpa.recorder import CulpaRecorder
 
     session = example_zero_config()
     example_context_manager()
@@ -115,5 +115,5 @@ if __name__ == "__main__":
 
     print("\n✅ All examples completed successfully!")
     print(f"\nTo view sessions in the dashboard:")
-    print("  1. prismo serve")
+    print("  1. culpa serve")
     print("  2. Open http://localhost:5173")

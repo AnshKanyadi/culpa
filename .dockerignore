@@ -1,0 +1,10 @@
+.venv
+.env
+.git
+.claude
+.pytest_cache
+__pycache__
+node_modules
+dashboard/dist
+*.pyc
+.DS_Store

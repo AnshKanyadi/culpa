@@ -1,7 +1,3 @@
-/**
- * TypeScript types matching the Prismo backend Pydantic models.
- */
-
 export type EventType = 'llm_call' | 'tool_call' | 'file_change' | 'terminal_cmd'
 export type FileOperation = 'create' | 'modify' | 'delete'
 export type SessionStatus = 'recording' | 'completed' | 'failed'
@@ -150,6 +146,7 @@ export interface SessionListItem {
   started_at: string
   ended_at?: string
   duration_ms?: number
+  expires_at?: string
   summary: SessionSummary
 }
 

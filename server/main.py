@@ -1,9 +1,4 @@
-"""
-Prismo FastAPI server — main entry point.
-
-Serves the REST API for session management, event queries, and fork execution.
-Also serves the React dashboard static files in production.
-"""
+"""Culpa FastAPI server entry point."""
 
 from __future__ import annotations
 
@@ -18,8 +13,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import sessions, events, forks
+from .api import sessions, events, forks, auth, billing, teams
 from .storage.database import init_db
+from .services.plans import delete_expired_sessions
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,39 +23,45 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Dashboard build directory
 DASHBOARD_DIR = Path(__file__).parent.parent / "dashboard" / "dist"
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Initialize resources on startup, clean up on shutdown."""
-    logger.info("Prismo server starting up...")
+    """Initialize database and clean expired sessions on startup."""
+    logger.info("Culpa server starting up...")
     init_db()
+    deleted = delete_expired_sessions()
+    if deleted:
+        logger.info(f"Cleaned up {deleted} expired session(s)")
     yield
-    logger.info("Prismo server shutting down...")
+    logger.info("Culpa server shutting down...")
 
 
 app = FastAPI(
-    title="Prismo API",
+    title="Culpa API",
     description="Deterministic replay & counterfactual debugging for AI agents",
     version="0.1.0",
     lifespan=lifespan,
 )
 
-# CORS — allow all origins for local development
+CORS_ORIGINS = os.environ.get(
+    "CORS_ORIGINS", "http://localhost:5173,https://app.culpa.dev"
+).split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Mount API routes
+app.include_router(auth.router)
 app.include_router(sessions.router)
 app.include_router(events.router)
 app.include_router(forks.router)
+app.include_router(billing.router)
+app.include_router(teams.router)
 
 
 @app.get("/api/health")
@@ -68,7 +70,6 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "version": "0.1.0"}
 
 
-# Serve React dashboard if built
 if DASHBOARD_DIR.exists():
     app.mount("/assets", StaticFiles(directory=str(DASHBOARD_DIR / "assets")), name="assets")
 
@@ -81,9 +82,9 @@ if DASHBOARD_DIR.exists():
 else:
     @app.get("/")
     async def root() -> dict[str, str]:
-        """Root endpoint when dashboard is not built."""
+        """Fallback root when dashboard is not built."""
         return {
-            "message": "Prismo API is running",
+            "message": "Culpa API is running",
             "docs": "/docs",
             "note": "Build the dashboard with: cd dashboard && npm run build",
         }

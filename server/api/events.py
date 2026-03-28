@@ -1,6 +1,4 @@
-"""
-Event query API routes for Prismo server.
-"""
+"""Event query API routes."""
 
 from __future__ import annotations
 
@@ -23,8 +21,7 @@ async def list_events(
     event_type: Optional[str] = Query(None, description="Filter by event type"),
     limit: int = Query(1000, ge=1, le=5000),
 ) -> dict[str, Any]:
-    """Get events for a session, optionally filtered by type."""
-    # Verify session exists
+    """List events for a session, optionally filtered by type."""
     if session_repo.get(session_id) is None:
         raise HTTPException(status_code=404, detail=f"Session {session_id!r} not found")
 
@@ -34,7 +31,7 @@ async def list_events(
 
 @router.get("/{session_id}/events/{event_id}")
 async def get_event(session_id: str, event_id: str) -> dict[str, Any]:
-    """Get a single event by ID."""
+    """Get a single event by ID within a session."""
     event = event_repo.get(session_id, event_id)
     if event is None:
         raise HTTPException(status_code=404, detail=f"Event {event_id!r} not found")
@@ -43,7 +40,7 @@ async def get_event(session_id: str, event_id: str) -> dict[str, Any]:
 
 @router.get("/{session_id}/timeline")
 async def get_timeline(session_id: str) -> dict[str, Any]:
-    """Get a simplified timeline view for a session."""
+    """Return a simplified timeline view for a session."""
     if session_repo.get(session_id) is None:
         raise HTTPException(status_code=404, detail=f"Session {session_id!r} not found")
 

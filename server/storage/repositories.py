@@ -1,14 +1,9 @@
-"""
-Data access layer for Prismo server.
-
-Provides repository classes for sessions, events, and forks using SQLite.
-"""
+"""Data access layer for sessions, events, and forks."""
 
 from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
 from typing import Any, Optional
 
 from .database import get_db
@@ -17,28 +12,28 @@ logger = logging.getLogger(__name__)
 
 
 def _serialize(obj: Any) -> str:
-    """Serialize an object to JSON string."""
+    """Serialize an object to a JSON string, using str() as a fallback for non-serializable types."""
     return json.dumps(obj, default=str)
 
 
 def _deserialize(s: str) -> Any:
-    """Deserialize a JSON string."""
+    """Deserialize a JSON string, returning empty dict for falsy input."""
     if not s:
         return {}
     return json.loads(s)
 
 
 class SessionRepository:
-    """Repository for session CRUD operations."""
+    """CRUD operations for sessions and their associated events."""
 
-    def create(self, session_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new session record."""
+    def create(self, session_data: dict[str, Any], user_id: Optional[str] = None, expires_at: Optional[str] = None) -> dict[str, Any]:
+        """Persist a session and its events, returning the stored session."""
         with get_db() as db:
             db.execute(
                 """
                 INSERT OR REPLACE INTO sessions
-                    (id, name, status, metadata_json, started_at, ended_at, duration_ms, summary_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    (id, name, status, metadata_json, started_at, ended_at, duration_ms, summary_json, user_id, expires_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     session_data["session_id"],
@@ -49,10 +44,11 @@ class SessionRepository:
                     session_data.get("ended_at"),
                     session_data.get("duration_ms"),
                     _serialize(session_data.get("summary", {})),
+                    user_id,
+                    expires_at,
                 ),
             )
 
-            # Upsert all events
             events = session_data.get("events", [])
             if events:
                 db.executemany(
@@ -75,7 +71,6 @@ class SessionRepository:
                     ],
                 )
 
-                # Store file snapshots separately for quick lookup
                 file_events = [e for e in events if e.get("event_type") == "file_change"]
                 for fe in file_events:
                     db.execute(
@@ -96,12 +91,18 @@ class SessionRepository:
 
         return self.get(session_data["session_id"])
 
-    def get(self, session_id: str) -> Optional[dict[str, Any]]:
-        """Get a session by ID with all its events."""
+    def get(self, session_id: str, user_id: Optional[str] = None) -> Optional[dict[str, Any]]:
+        """Fetch a session with all its events. If user_id is given, verify ownership."""
         with get_db() as db:
-            row = db.execute(
-                "SELECT * FROM sessions WHERE id = ?", (session_id,)
-            ).fetchone()
+            if user_id is not None:
+                row = db.execute(
+                    "SELECT * FROM sessions WHERE id = ? AND user_id = ?",
+                    (session_id, user_id),
+                ).fetchone()
+            else:
+                row = db.execute(
+                    "SELECT * FROM sessions WHERE id = ?", (session_id,)
+                ).fetchone()
 
             if row is None:
                 return None
@@ -110,7 +111,6 @@ class SessionRepository:
             session["metadata"] = _deserialize(session.pop("metadata_json", "{}"))
             session["summary"] = _deserialize(session.pop("summary_json", "{}"))
 
-            # Fetch events
             event_rows = db.execute(
                 "SELECT data_json FROM events WHERE session_id = ? ORDER BY sequence ASC",
                 (session_id,),
@@ -125,12 +125,16 @@ class SessionRepository:
         page_size: int = 20,
         status: Optional[str] = None,
         search: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> dict[str, Any]:
-        """List sessions with pagination and optional filtering."""
+        """List sessions with pagination and optional filters."""
         with get_db() as db:
             conditions = []
             params: list[Any] = []
 
+            if user_id is not None:
+                conditions.append("user_id = ?")
+                params.append(user_id)
             if status:
                 conditions.append("status = ?")
                 params.append(status)
@@ -148,7 +152,7 @@ class SessionRepository:
             rows = db.execute(
                 f"""
                 SELECT id, name, status, metadata_json, started_at, ended_at,
-                       duration_ms, summary_json, created_at
+                       duration_ms, summary_json, created_at, user_id, expires_at
                 FROM sessions {where}
                 ORDER BY started_at DESC
                 LIMIT ? OFFSET ?
@@ -171,15 +175,102 @@ class SessionRepository:
                 "total_pages": (total + page_size - 1) // page_size,
             }
 
-    def delete(self, session_id: str) -> bool:
-        """Delete a session and all its events."""
+    def _list_query(
+        self,
+        page: int,
+        page_size: int,
+        conditions: list[str],
+        params: list[Any],
+    ) -> dict[str, Any]:
+        """Shared pagination query used by team-aware list methods."""
         with get_db() as db:
-            result = db.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+            where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+            total = db.execute(
+                f"SELECT COUNT(*) as cnt FROM sessions {where}", params
+            ).fetchone()["cnt"]
+            offset = (page - 1) * page_size
+            rows = db.execute(
+                f"""SELECT id, name, status, metadata_json, started_at, ended_at,
+                           duration_ms, summary_json, created_at, user_id, expires_at, visibility
+                    FROM sessions {where}
+                    ORDER BY started_at DESC LIMIT ? OFFSET ?""",
+                params + [page_size, offset],
+            ).fetchall()
+            sessions = []
+            for row in rows:
+                s = dict(row)
+                s["metadata"] = _deserialize(s.pop("metadata_json", "{}"))
+                s["summary"] = _deserialize(s.pop("summary_json", "{}"))
+                sessions.append(s)
+            return {
+                "sessions": sessions, "total": total, "page": page,
+                "page_size": page_size, "total_pages": (total + page_size - 1) // page_size,
+            }
+
+    def list_team_sessions(
+        self,
+        page: int = 1,
+        page_size: int = 20,
+        status: Optional[str] = None,
+        search: Optional[str] = None,
+        teammate_ids: Optional[set[str]] = None,
+    ) -> dict[str, Any]:
+        """List team-visible sessions from teammates."""
+        if not teammate_ids:
+            return {"sessions": [], "total": 0, "page": page, "page_size": page_size, "total_pages": 0}
+        conditions = [f"user_id IN ({','.join('?' for _ in teammate_ids)})", "visibility = 'team'"]
+        params: list[Any] = list(teammate_ids)
+        if status:
+            conditions.append("status = ?")
+            params.append(status)
+        if search:
+            conditions.append("name LIKE ?")
+            params.append(f"%{search}%")
+        return self._list_query(page, page_size, conditions, params)
+
+    def list_with_team(
+        self,
+        page: int = 1,
+        page_size: int = 20,
+        status: Optional[str] = None,
+        search: Optional[str] = None,
+        user_id: Optional[str] = None,
+        teammate_ids: Optional[set[str]] = None,
+    ) -> dict[str, Any]:
+        """List own sessions combined with team-visible sessions from teammates."""
+        ownership_parts = []
+        params: list[Any] = []
+        if user_id:
+            ownership_parts.append("user_id = ?")
+            params.append(user_id)
+        if teammate_ids:
+            placeholders = ','.join('?' for _ in teammate_ids)
+            ownership_parts.append(f"(user_id IN ({placeholders}) AND visibility = 'team')")
+            params.extend(teammate_ids)
+        conditions = [f"({' OR '.join(ownership_parts)})"] if ownership_parts else []
+        if status:
+            conditions.append("status = ?")
+            params.append(status)
+        if search:
+            conditions.append("name LIKE ?")
+            params.append(f"%{search}%")
+        return self._list_query(page, page_size, conditions, params)
+
+    def delete(self, session_id: str, user_id: Optional[str] = None) -> bool:
+        """Delete a session and cascade to events. If user_id given, verify ownership."""
+        with get_db() as db:
+            if user_id is not None:
+                result = db.execute(
+                    "DELETE FROM sessions WHERE id = ? AND user_id = ?",
+                    (session_id, user_id),
+                )
+            else:
+                result = db.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
             return result.rowcount > 0
 
 
 class EventRepository:
-    """Repository for event query operations."""
+    """Read-only query operations for events."""
 
     def list(
         self,
@@ -187,7 +278,7 @@ class EventRepository:
         event_type: Optional[str] = None,
         limit: int = 1000,
     ) -> list[dict[str, Any]]:
-        """List events for a session."""
+        """List events for a session, optionally filtered by type."""
         with get_db() as db:
             query = "SELECT data_json FROM events WHERE session_id = ?"
             params: list[Any] = [session_id]
@@ -203,7 +294,7 @@ class EventRepository:
             return [_deserialize(r["data_json"]) for r in rows]
 
     def get(self, session_id: str, event_id: str) -> Optional[dict[str, Any]]:
-        """Get a single event."""
+        """Fetch a single event by session and event ID."""
         with get_db() as db:
             row = db.execute(
                 "SELECT data_json FROM events WHERE session_id = ? AND id = ?",
@@ -212,7 +303,7 @@ class EventRepository:
             return _deserialize(row["data_json"]) if row else None
 
     def get_timeline(self, session_id: str) -> list[dict[str, Any]]:
-        """Get a simplified timeline view for a session."""
+        """Return a lightweight timeline with key fields extracted via json_extract."""
         with get_db() as db:
             rows = db.execute(
                 """
@@ -233,10 +324,10 @@ class EventRepository:
 
 
 class ForkRepository:
-    """Repository for fork operations."""
+    """CRUD operations for fork results."""
 
     def create(self, fork_data: dict[str, Any]) -> dict[str, Any]:
-        """Create a new fork record."""
+        """Persist a fork result and return the stored record."""
         with get_db() as db:
             db.execute(
                 """
@@ -260,7 +351,7 @@ class ForkRepository:
         return self.get(fork_data["fork_id"])
 
     def get(self, fork_id: str) -> Optional[dict[str, Any]]:
-        """Get a fork by ID."""
+        """Fetch a fork by ID, deserializing JSON fields."""
         with get_db() as db:
             row = db.execute(
                 "SELECT * FROM forks WHERE id = ?", (fork_id,)
@@ -276,7 +367,7 @@ class ForkRepository:
             return fork
 
     def list_for_session(self, session_id: str) -> list[dict[str, Any]]:
-        """List all forks for a session."""
+        """List all forks for a session (summary only, without full event data)."""
         with get_db() as db:
             rows = db.execute(
                 """

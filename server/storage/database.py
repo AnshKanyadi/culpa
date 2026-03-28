@@ -1,12 +1,7 @@
-"""
-SQLite database setup and migrations for Prismo server.
-
-Creates and manages the database schema for storing sessions, events, and forks.
-"""
+"""SQLite database setup and migrations."""
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import sqlite3
@@ -16,27 +11,18 @@ from typing import Generator
 
 logger = logging.getLogger(__name__)
 
-# Default database path
-DEFAULT_DB_PATH = str(Path.home() / ".prismo" / "prismo.db")
+DEFAULT_DB_PATH = str(Path.home() / ".culpa" / "culpa.db")
 
 _connection: sqlite3.Connection | None = None
 
 
 def get_db_path() -> str:
-    """Get the database path from environment or default."""
-    return os.environ.get("PRISMO_DB_PATH", DEFAULT_DB_PATH)
+    """Return the database path from env or the default ~/.culpa/culpa.db."""
+    return os.environ.get("CULPA_DB_PATH", DEFAULT_DB_PATH)
 
 
 def init_db(db_path: str | None = None) -> sqlite3.Connection:
-    """
-    Initialize the database, creating tables if they don't exist.
-
-    Args:
-        db_path: Path to SQLite database file. Uses default if not provided.
-
-    Returns:
-        The database connection.
-    """
+    """Create tables if needed and return the database connection."""
     global _connection
 
     path = db_path or get_db_path()
@@ -54,7 +40,7 @@ def init_db(db_path: str | None = None) -> sqlite3.Connection:
 
 
 def get_connection() -> sqlite3.Connection:
-    """Get the active database connection."""
+    """Return the active connection, initializing if needed."""
     global _connection
     if _connection is None:
         _connection = init_db()
@@ -63,7 +49,7 @@ def get_connection() -> sqlite3.Connection:
 
 @contextmanager
 def get_db() -> Generator[sqlite3.Connection, None, None]:
-    """Context manager that yields a database connection."""
+    """Yield a database connection with automatic commit/rollback."""
     conn = get_connection()
     try:
         yield conn
@@ -74,7 +60,7 @@ def get_db() -> Generator[sqlite3.Connection, None, None]:
 
 
 def _run_migrations(conn: sqlite3.Connection) -> None:
-    """Run database migrations to create/update schema."""
+    """Create or update the database schema."""
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS sessions (
             id TEXT PRIMARY KEY,
@@ -133,6 +119,84 @@ def _run_migrations(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX IF NOT EXISTS idx_snapshots_session ON file_snapshots(session_id);
         CREATE INDEX IF NOT EXISTS idx_snapshots_path ON file_snapshots(session_id, file_path);
+
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            email TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            name TEXT,
+            plan TEXT NOT NULL DEFAULT 'free',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS api_keys (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            key_hash TEXT NOT NULL,
+            key_prefix TEXT NOT NULL,
+            name TEXT NOT NULL DEFAULT 'Default',
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            last_used_at TEXT,
+            revoked_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
+        CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
+
+        CREATE TABLE IF NOT EXISTS teams (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS team_members (
+            team_id TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+            user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            role TEXT NOT NULL DEFAULT 'member',
+            joined_at TEXT NOT NULL DEFAULT (datetime('now')),
+            PRIMARY KEY (team_id, user_id)
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_team_members_user ON team_members(user_id);
+
+        CREATE TABLE IF NOT EXISTS team_invites (
+            id TEXT PRIMARY KEY,
+            team_id TEXT NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+            email TEXT NOT NULL,
+            invited_by TEXT NOT NULL REFERENCES users(id),
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            accepted_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_team_invites_email ON team_invites(email);
     """)
     conn.commit()
+
+    # SQLite doesn't support IF NOT EXISTS for ALTER TABLE ADD COLUMN,
+    # so we catch OperationalError for columns that already exist.
+    for col_sql in [
+        "ALTER TABLE sessions ADD COLUMN user_id TEXT REFERENCES users(id)",
+        "ALTER TABLE sessions ADD COLUMN expires_at TEXT",
+        "ALTER TABLE sessions ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'",
+    ]:
+        try:
+            conn.execute(col_sql)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
+    for col_sql in [
+        "ALTER TABLE users ADD COLUMN stripe_customer_id TEXT",
+        "ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT",
+        "ALTER TABLE users ADD COLUMN plan_expires_at TEXT",
+        "ALTER TABLE users ADD COLUMN email_notifications INTEGER NOT NULL DEFAULT 1",
+    ]:
+        try:
+            conn.execute(col_sql)
+            conn.commit()
+        except sqlite3.OperationalError:
+            pass
+
     logger.debug("Database migrations complete")

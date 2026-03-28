@@ -1,7 +1,3 @@
-/**
- * Hook for managing fork operations.
- */
-
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'

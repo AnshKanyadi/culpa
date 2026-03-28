@@ -1,0 +1,15 @@
+services:
+  culpa:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - culpa-data:/data
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - CORS_ORIGINS=*
+      - CULPA_DB_PATH=/data/culpa.db
+    restart: unless-stopped
+
+volumes:
+  culpa-data:

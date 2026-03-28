@@ -1,1 +1,1 @@
-"""Prismo server package."""
+"""Culpa server package."""

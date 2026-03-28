@@ -1,5 +1,5 @@
 """
-Tests for the PrismoRecorder.
+Tests for the CulpaRecorder.
 """
 
 import sys
@@ -9,22 +9,22 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 import pytest
 from datetime import datetime, timezone
 
-from prismo.recorder import PrismoRecorder
-from prismo.models import (
+from culpa.recorder import CulpaRecorder
+from culpa.models import (
     SessionStatus, LLMCallEvent, ToolCallEvent,
     FileChangeEvent, TerminalCommandEvent, FileOperation,
 )
 
 
 @pytest.fixture
-def recorder() -> PrismoRecorder:
-    r = PrismoRecorder()
+def recorder() -> CulpaRecorder:
+    r = CulpaRecorder()
     r.start_session("Test session", {"test": True})
     return r
 
 
 def test_start_session():
-    r = PrismoRecorder()
+    r = CulpaRecorder()
     session_id = r.start_session("My session", {"key": "value"})
     assert session_id is not None
     assert len(session_id) == 26  # ULID length
@@ -149,13 +149,13 @@ def test_fail_session(recorder):
 
 
 def test_require_active_session():
-    r = PrismoRecorder()
+    r = CulpaRecorder()
     with pytest.raises(RuntimeError):
         r.record_llm_call("model", [], "response")
 
 
 def test_diff_auto_computed():
-    r = PrismoRecorder()
+    r = CulpaRecorder()
     r.start_session("test")
     r.record_file_change(
         path="test.py",

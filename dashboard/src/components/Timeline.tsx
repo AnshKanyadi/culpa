@@ -1,8 +1,3 @@
-/**
- * Vertical event timeline component for the session detail view.
- * Shows all events in chronological order with color-coded icons.
- */
-
 import React, { useRef, useEffect } from 'react'
 import {
   Brain,
@@ -37,12 +32,12 @@ function EventIcon({ type }: { type: EventType }) {
 }
 
 function getEventTypeColors(type: EventType, hasError: boolean) {
-  if (hasError) return 'bg-prismo-red-dim border-prismo-red text-prismo-red'
+  if (hasError) return 'bg-culpa-red-dim border-culpa-red text-culpa-red'
   switch (type) {
-    case 'llm_call': return 'bg-prismo-blue-dim border-prismo-blue text-prismo-blue'
-    case 'tool_call': return 'bg-prismo-purple-dim border-prismo-purple text-prismo-purple'
-    case 'file_change': return 'bg-prismo-green-dim border-prismo-green text-prismo-green'
-    case 'terminal_cmd': return 'bg-prismo-orange-dim border-prismo-orange text-prismo-orange'
+    case 'llm_call': return 'bg-culpa-blue-dim border-culpa-blue text-culpa-blue'
+    case 'tool_call': return 'bg-culpa-purple-dim border-culpa-purple text-culpa-purple'
+    case 'file_change': return 'bg-culpa-green-dim border-culpa-green text-culpa-green'
+    case 'terminal_cmd': return 'bg-culpa-orange-dim border-culpa-orange text-culpa-orange'
   }
 }
 
@@ -82,12 +77,10 @@ function EventNode({
 
   return (
     <div className="relative flex gap-3 group">
-      {/* Vertical connector line */}
       {!isLast && (
-        <div className="absolute left-[19px] top-[36px] bottom-0 w-px bg-prismo-border" />
+        <div className="absolute left-[19px] top-[36px] bottom-0 w-px bg-culpa-border" />
       )}
 
-      {/* Icon node */}
       <div className="flex-shrink-0 relative z-10">
         <button
           onClick={onSelect}
@@ -103,12 +96,11 @@ function EventNode({
         </button>
       </div>
 
-      {/* Content */}
       <div
         className={cn(
           'flex-1 min-w-0 pb-4 cursor-pointer rounded-lg p-2 -m-2 transition-colors duration-100',
-          isSelected ? 'bg-prismo-muted' : 'hover:bg-prismo-surface',
-          isHighlighted && 'bg-prismo-muted/60',
+          isSelected ? 'bg-culpa-muted' : 'hover:bg-culpa-surface',
+          isHighlighted && 'bg-culpa-muted/60',
         )}
         onClick={onSelect}
       >
@@ -116,31 +108,30 @@ function EventNode({
           <div className="flex-1 min-w-0">
             <p className={cn(
               'text-sm font-medium truncate',
-              hasError ? 'text-prismo-red' : 'text-prismo-text',
+              hasError ? 'text-culpa-red' : 'text-culpa-text',
             )}>
               {getEventDescription(event)}
             </p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs text-prismo-text-dim font-mono">
+              <span className="text-xs text-culpa-text-dim font-mono">
                 {formatTimestamp(event.timestamp)}
               </span>
               {duration && (
                 <>
-                  <span className="text-prismo-border">·</span>
-                  <span className="text-xs text-prismo-text-dim">{duration}</span>
+                  <span className="text-culpa-border">·</span>
+                  <span className="text-xs text-culpa-text-dim">{duration}</span>
                 </>
               )}
               {hasError && (
                 <>
-                  <span className="text-prismo-border">·</span>
-                  <span className="text-xs text-prismo-red">error</span>
+                  <span className="text-culpa-border">·</span>
+                  <span className="text-xs text-culpa-red">error</span>
                 </>
               )}
             </div>
           </div>
 
           <div className="flex items-center gap-1 flex-shrink-0">
-            {/* Fork button for LLM calls */}
             {isLLMCall && (
               <button
                 onClick={(e) => {
@@ -149,7 +140,7 @@ function EventNode({
                 }}
                 className={cn(
                   'opacity-0 group-hover:opacity-100 transition-opacity',
-                  'p-1 rounded text-prismo-text-dim hover:text-prismo-blue hover:bg-prismo-blue-dim',
+                  'p-1 rounded text-culpa-text-dim hover:text-culpa-blue hover:bg-culpa-blue-dim',
                 )}
                 title="Fork from here"
               >
@@ -157,27 +148,25 @@ function EventNode({
               </button>
             )}
             {isSelected && (
-              <ChevronRight size={14} className="text-prismo-text-dim" />
+              <ChevronRight size={14} className="text-culpa-text-dim" />
             )}
           </div>
         </div>
 
-        {/* LLM call token stats */}
         {isLLMCall && llmEvent && (
           <div className="flex gap-3 mt-1.5">
-            <span className="text-xs text-prismo-text-dim">
+            <span className="text-xs text-culpa-text-dim">
               ↑{llmEvent.token_usage?.input_tokens?.toLocaleString() || 0}
             </span>
-            <span className="text-xs text-prismo-text-dim">
+            <span className="text-xs text-culpa-text-dim">
               ↓{llmEvent.token_usage?.output_tokens?.toLocaleString() || 0}
             </span>
           </div>
         )}
 
-        {/* Parent event indicator */}
         {event.parent_event_id && (
           <div className="mt-1">
-            <span className="text-xs text-prismo-text-dim/60 font-mono">
+            <span className="text-xs text-culpa-text-dim/60 font-mono">
               child of {event.parent_event_id.slice(-8)}
             </span>
           </div>
@@ -201,7 +190,6 @@ export function Timeline({
     ? events[replayIndex]?.event_id
     : undefined
 
-  // Auto-scroll to selected event
   useEffect(() => {
     if (selectedRef.current) {
       selectedRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -210,7 +198,7 @@ export function Timeline({
 
   if (events.length === 0) {
     return (
-      <div className={cn('flex items-center justify-center h-64 text-prismo-text-dim', className)}>
+      <div className={cn('flex items-center justify-center h-64 text-culpa-text-dim', className)}>
         No events recorded
       </div>
     )

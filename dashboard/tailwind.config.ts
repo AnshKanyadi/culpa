@@ -5,8 +5,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Prismo brand palette — dark & premium
-        prismo: {
+        // Culpa brand palette — dark & premium
+        culpa: {
           bg: '#0a0a0b',
           surface: '#111113',
           border: '#1e1e21',

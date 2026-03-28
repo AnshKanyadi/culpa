@@ -1,5 +1,5 @@
 """
-Demo session generator for Prismo.
+Demo session generator for Culpa.
 
 Generates a realistic pre-recorded session simulating an AI coding agent
 attempting to fix a failing authentication test, which accidentally breaks
@@ -20,13 +20,13 @@ from pathlib import Path
 # Add SDK to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "sdk"))
 
-from prismo.models import (
+from culpa.models import (
     Session, SessionStatus, SessionSummary,
     LLMCallEvent, ToolCallEvent, FileChangeEvent, TerminalCommandEvent,
     LLMParameters, TokenUsage, ToolCallRecord, Message,
     FileOperation, EventType,
 )
-from prismo.utils.ids import generate_ulid
+from culpa.utils.ids import generate_ulid
 
 
 def make_ts(base: datetime, seconds_offset: float) -> datetime:
@@ -37,7 +37,7 @@ def generate_demo_session() -> Session:
     """Generate the demo session with ~18 realistic events."""
 
     base_time = datetime(2026, 3, 20, 14, 30, 0, tzinfo=timezone.utc)
-    session_id = "01HPRISMO00DEMO0SESSION001"
+    session_id = "01HCULPA00DEMO0SESSION001"
 
     # -----------------------------------------------------------------------
     # Event 1: Initial LLM call — agent reads the task
@@ -681,7 +681,7 @@ def main() -> None:
     import argparse
     import httpx
 
-    parser = argparse.ArgumentParser(description="Generate Prismo demo session")
+    parser = argparse.ArgumentParser(description="Generate Culpa demo session")
     parser.add_argument("--upload", action="store_true", help="Upload to local server")
     parser.add_argument("--server", default="http://localhost:8000", help="Server URL")
     parser.add_argument("--output", default=None, help="Output JSON file path")
@@ -697,7 +697,7 @@ def main() -> None:
 
     # Save to disk
     output_path = args.output or str(
-        Path.home() / ".prismo" / "sessions" / f"{session.session_id}.json"
+        Path.home() / ".culpa" / "sessions" / f"{session.session_id}.json"
     )
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -721,7 +721,7 @@ def main() -> None:
             print(f"View at: {args.server}/session/{session.session_id}")
         except Exception as e:
             print(f"Upload failed: {e}")
-            print("Make sure the server is running: prismo serve")
+            print("Make sure the server is running: culpa serve")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,3 @@
-/**
- * React Query hooks for session data.
- */
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '../api/client'
 
@@ -10,11 +6,12 @@ export function useSessions(params?: {
   page_size?: number
   status?: string
   search?: string
+  scope?: string
 }) {
   return useQuery({
     queryKey: ['sessions', params],
     queryFn: () => api.sessions.list(params),
-    refetchInterval: 5000, // Poll for new sessions
+    refetchInterval: 5000,
   })
 }
 
