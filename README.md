@@ -10,7 +10,7 @@
 
 ---
 
-Culpa is a flight recorder for AI agents. It captures every LLM call, tool invocation, file change, and terminal command with full fidelity — then lets you replay the exact failure path or fork at any decision point to run "what if?" experiments.
+Culpa is a flight recorder for AI agents. It captures every LLM call, tool invocation, file change, and terminal command with full fidelity and then lets you replay the exact failure path or fork at any decision point to run "what if?" experiments.
 
 Works with Claude Code, Cursor, OpenAI-based agents, or anything that talks to the Anthropic/OpenAI API.
 
@@ -80,7 +80,7 @@ culpa proxy start --name "debugging auth" --watch .
 ANTHROPIC_BASE_URL=http://localhost:4560 claude
 ```
 
-The proxy sits between your AI tool and the real API, recording everything transparently. Zero latency added — chunks stream through immediately.
+The proxy sits between your AI tool and the real API, recording everything transparently. Zero latency added as chunks stream through immediately.
 
 ```bash
 # When done
@@ -180,7 +180,7 @@ culpa proxy env                       Print env vars for proxy
 
 Culpa is designed to run fully self-hosted with zero external dependencies. The server needs only Python and SQLite. No Stripe, no Resend, no cloud accounts required.
 
-Optional integrations (for the cloud-hosted version):
+Optional integrations (for the cloud-hosted version) COMING SOON:
 - **Stripe** — billing for paid plans
 - **Resend** — transactional emails
 - Both degrade gracefully when not configured
