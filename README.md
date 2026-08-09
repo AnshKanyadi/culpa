@@ -1,3 +1,5 @@
+
+
 <p align="center">
   <img src="dashboard/public/culpa-logo.svg" alt="Culpa" width="64" height="64" />
 </p>
@@ -54,6 +56,8 @@ pip install -e ".[all,dev]"
 cd dashboard && npm install && npm run dev &
 cd server && uvicorn main:app --reload
 ```
+
+Dashboard at `http://localhost:5173`.
 
 ## Recording sessions
 
